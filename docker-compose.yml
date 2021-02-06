@@ -1,0 +1,37 @@
+version: "3"
+services:
+  nginx:
+    build: nginx #./nginx/Dockerfileを使って起動する
+    depends_on: #jenkinsの後に起動させるため設定する
+      - jenkins
+    container_name: nginx
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+      - ./nginx/servercerts:/etc/nginx/servercerts
+      - ./nginx/clientcerts:/etc/nginx/clientcerts
+    ports:
+      - 443:443
+    networks:
+      reverse-proxy:
+        ipv4_address: 172.40.0.2
+  jenkins:
+    image: jenkins/jenkins:lts
+    container_name: jenkins
+    volumes:
+      - ./jenkins/home:/var/jenkins_home
+    restart: always
+    environment:
+      TZ: Asia/Tokyo
+    tty: true
+    networks:
+      reverse-proxy:
+        ipv4_address: 172.40.0.3
+
+networks:
+  reverse-proxy:
+    name: reverse-proxy
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.40.0.0/24
